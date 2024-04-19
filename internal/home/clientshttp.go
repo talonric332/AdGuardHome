@@ -96,10 +96,12 @@ func (clients *clientsContainer) handleGetClients(w http.ResponseWriter, r *http
 	clients.lock.Lock()
 	defer clients.lock.Unlock()
 
-	for _, c := range clients.list {
+	clients.clientIndex.Range(func(c *client.Persistent) (cont bool) {
 		cj := clientToJSON(c)
 		data.Clients = append(data.Clients, cj)
-	}
+
+		return true
+	})
 
 	clients.runtimeIndex.Range(func(rc *client.Runtime) (cont bool) {
 		src, host := rc.Info()
@@ -406,7 +408,7 @@ func (clients *clientsContainer) handleUpdateClient(w http.ResponseWriter, r *ht
 		clients.lock.Lock()
 		defer clients.lock.Unlock()
 
-		prev, ok = clients.list[dj.Name]
+		prev, ok = clients.clientIndex.FindByName(dj.Name)
 	}()
 
 	if !ok {

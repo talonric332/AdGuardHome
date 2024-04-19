@@ -6,6 +6,7 @@ import (
 	"net/netip"
 
 	"github.com/AdguardTeam/AdGuardHome/internal/aghalg"
+	"github.com/AdguardTeam/golibs/errors"
 )
 
 // macKey contains MAC as byte array of 6, 8, or 20 bytes.
@@ -28,6 +29,9 @@ func macToKey(mac net.HardwareAddr) (key macKey) {
 
 // Index stores all information about persistent clients.
 type Index struct {
+	// nameToUID maps client name to UID.
+	nameToUID map[string]UID
+
 	// clientIDToUID maps client ID to UID.
 	clientIDToUID map[string]UID
 
@@ -47,6 +51,7 @@ type Index struct {
 // NewIndex initializes the new instance of client index.
 func NewIndex() (ci *Index) {
 	return &Index{
+		nameToUID:     map[string]UID{},
 		clientIDToUID: map[string]UID{},
 		ipToUID:       map[netip.Addr]UID{},
 		subnetToUID:   aghalg.NewSortedMap[netip.Prefix, UID](subnetCompare),
@@ -61,6 +66,8 @@ func (ci *Index) Add(c *Persistent) {
 	if (c.UID == UID{}) {
 		panic("client must contain uid")
 	}
+
+	ci.nameToUID[c.Name] = c.UID
 
 	for _, id := range c.ClientIDs {
 		ci.clientIDToUID[id] = c.UID
@@ -184,13 +191,23 @@ func (ci *Index) Find(id string) (c *Persistent, ok bool) {
 
 	mac, err := net.ParseMAC(id)
 	if err == nil {
-		return ci.findByMAC(mac)
+		return ci.FindByMAC(mac)
 	}
 
 	return nil, false
 }
 
-// find finds persistent client by IP address.
+// FindByName finds persistent client by name.
+func (ci *Index) FindByName(name string) (c *Persistent, found bool) {
+	uid, found := ci.nameToUID[name]
+	if found {
+		return ci.uidToClient[uid], true
+	}
+
+	return nil, false
+}
+
+// findByIP finds persistent client by IP address.
 func (ci *Index) findByIP(ip netip.Addr) (c *Persistent, found bool) {
 	uid, found := ci.ipToUID[ip]
 	if found {
@@ -214,8 +231,8 @@ func (ci *Index) findByIP(ip netip.Addr) (c *Persistent, found bool) {
 	return nil, false
 }
 
-// find finds persistent client by MAC.
-func (ci *Index) findByMAC(mac net.HardwareAddr) (c *Persistent, found bool) {
+// FindByMAC finds persistent client by MAC.
+func (ci *Index) FindByMAC(mac net.HardwareAddr) (c *Persistent, found bool) {
 	k := macToKey(mac)
 	uid, found := ci.macToUID[k]
 	if found {
@@ -228,6 +245,8 @@ func (ci *Index) findByMAC(mac net.HardwareAddr) (c *Persistent, found bool) {
 // Delete removes information about persistent client from the index.  c must be
 // non-nil.
 func (ci *Index) Delete(c *Persistent) {
+	delete(ci.nameToUID, c.Name)
+
 	for _, id := range c.ClientIDs {
 		delete(ci.clientIDToUID, id)
 	}
@@ -246,4 +265,31 @@ func (ci *Index) Delete(c *Persistent) {
 	}
 
 	delete(ci.uidToClient, c.UID)
+}
+
+// Size returns the number of persistent clients.
+func (ci *Index) Size() (n int) {
+	return len(ci.uidToClient)
+}
+
+// Range calls f for each persistent client.
+func (ci *Index) Range(f func(c *Persistent) (cont bool)) {
+	for _, c := range ci.uidToClient {
+		if !f(c) {
+			return
+		}
+	}
+}
+
+// CloseUpstreams closes upstream configurations of persistent clients.
+func (ci *Index) CloseUpstreams() (err error) {
+	var errs []error
+	for _, c := range ci.uidToClient {
+		err = c.CloseUpstreams()
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	return errors.Join(errs...)
 }

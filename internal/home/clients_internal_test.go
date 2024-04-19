@@ -145,8 +145,9 @@ func TestClients(t *testing.T) {
 			cliNewIP = netip.MustParseAddr(cliNew)
 		)
 
-		prev, ok := clients.list["client1"]
+		prev, ok := clients.clientIndex.FindByName("client1")
 		require.True(t, ok)
+		require.NotNil(t, prev)
 
 		err := clients.update(prev, &client.Persistent{
 			Name: "client1",
@@ -160,8 +161,9 @@ func TestClients(t *testing.T) {
 
 		assert.Equal(t, clients.clientSource(cliNewIP), client.SourcePersistent)
 
-		prev, ok = clients.list["client1"]
+		prev, ok = clients.clientIndex.FindByName("client1")
 		require.True(t, ok)
+		require.NotNil(t, prev)
 
 		err = clients.update(prev, &client.Persistent{
 			Name:           "client1-renamed",
@@ -177,7 +179,7 @@ func TestClients(t *testing.T) {
 		assert.Equal(t, "client1-renamed", c.Name)
 		assert.True(t, c.UseOwnSettings)
 
-		nilCli, ok := clients.list["client1"]
+		nilCli, ok := clients.clientIndex.FindByName("client1")
 		require.False(t, ok)
 
 		assert.Nil(t, nilCli)

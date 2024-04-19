@@ -24,7 +24,6 @@ import (
 	"github.com/AdguardTeam/golibs/hostsfile"
 	"github.com/AdguardTeam/golibs/log"
 	"github.com/AdguardTeam/golibs/stringutil"
-	"golang.org/x/exp/maps"
 )
 
 // DHCP is an interface for accessing DHCP lease data the [clientsContainer]
@@ -46,10 +45,6 @@ type DHCP interface {
 
 // clientsContainer is the storage of all runtime and persistent clients.
 type clientsContainer struct {
-	// TODO(a.garipov): Perhaps use a number of separate indices for different
-	// types (string, netip.Addr, and so on).
-	list map[string]*client.Persistent // name -> client
-
 	// clientIndex stores information about persistent clients.
 	clientIndex *client.Index
 
@@ -101,11 +96,10 @@ func (clients *clientsContainer) Init(
 	arpDB arpdb.Interface,
 	filteringConf *filtering.Config,
 ) (err error) {
-	if clients.list != nil {
+	if clients.clientIndex != nil {
 		log.Fatal("clients.list != nil")
 	}
 
-	clients.list = map[string]*client.Persistent{}
 	clients.runtimeIndex = client.NewRuntimeIndex()
 
 	clients.clientIndex = client.NewIndex()
@@ -301,9 +295,9 @@ func (clients *clientsContainer) forConfig() (objs []*clientObject) {
 	clients.lock.Lock()
 	defer clients.lock.Unlock()
 
-	objs = make([]*clientObject, 0, len(clients.list))
-	for _, cli := range clients.list {
-		o := &clientObject{
+	objs = make([]*clientObject, 0, clients.clientIndex.Size())
+	clients.clientIndex.Range(func(cli *client.Persistent) (cont bool) {
+		objs = append(objs, &clientObject{
 			Name: cli.Name,
 
 			BlockedServices: cli.BlockedServices.Clone(),
@@ -324,10 +318,10 @@ func (clients *clientsContainer) forConfig() (objs []*clientObject) {
 			IgnoreStatistics:         cli.IgnoreStatistics,
 			UpstreamsCacheEnabled:    cli.UpstreamsCacheEnabled,
 			UpstreamsCacheSize:       cli.UpstreamsCacheSize,
-		}
+		})
 
-		objs = append(objs, o)
-	}
+		return true
+	})
 
 	// Maps aren't guaranteed to iterate in the same order each time, so the
 	// above loop can generate different orderings when writing to the config
@@ -542,11 +536,9 @@ func (clients *clientsContainer) findDHCP(ip netip.Addr) (c *client.Persistent, 
 		return nil, false
 	}
 
-	for _, c = range clients.list {
-		_, found := slices.BinarySearchFunc(c.MACs, foundMAC, slices.Compare[net.HardwareAddr])
-		if found {
-			return c, true
-		}
+	c, found := clients.clientIndex.FindByMAC(foundMAC)
+	if found {
+		return c, true
 	}
 
 	return nil, false
@@ -625,7 +617,9 @@ func (clients *clientsContainer) add(c *client.Persistent) (ok bool, err error) 
 	defer clients.lock.Unlock()
 
 	// check Name index
-	_, ok = clients.list[c.Name]
+	//
+	// TODO(s.chzhen):  Use [client.Index.Clashes].
+	_, ok = clients.clientIndex.FindByName(c.Name)
 	if ok {
 		return false, nil
 	}
@@ -639,17 +633,13 @@ func (clients *clientsContainer) add(c *client.Persistent) (ok bool, err error) 
 
 	clients.addLocked(c)
 
-	log.Debug("clients: added %q: ID:%q [%d]", c.Name, c.IDs(), len(clients.list))
+	log.Debug("clients: added %q: ID:%q [%d]", c.Name, c.IDs(), clients.clientIndex.Size())
 
 	return true, nil
 }
 
 // addLocked c to the indexes.  clients.lock is expected to be locked.
 func (clients *clientsContainer) addLocked(c *client.Persistent) {
-	// update Name index
-	clients.list[c.Name] = c
-
-	// update ID index
 	clients.clientIndex.Add(c)
 }
 
@@ -658,8 +648,7 @@ func (clients *clientsContainer) remove(name string) (ok bool) {
 	clients.lock.Lock()
 	defer clients.lock.Unlock()
 
-	var c *client.Persistent
-	c, ok = clients.list[name]
+	c, ok := clients.clientIndex.FindByName(name)
 	if !ok {
 		return false
 	}
@@ -675,9 +664,6 @@ func (clients *clientsContainer) removeLocked(c *client.Persistent) {
 	if err := c.CloseUpstreams(); err != nil {
 		log.Error("client container: removing client %s: %s", c.Name, err)
 	}
-
-	// Update the name index.
-	delete(clients.list, c.Name)
 
 	// Update the ID index.
 	clients.clientIndex.Delete(c)
@@ -696,7 +682,7 @@ func (clients *clientsContainer) update(prev, c *client.Persistent) (err error) 
 
 	// Check the name index.
 	if prev.Name != c.Name {
-		_, ok := clients.list[c.Name]
+		_, ok := clients.clientIndex.FindByName(c.Name)
 		if ok {
 			return errors.Error("client already exists")
 		}
@@ -883,18 +869,5 @@ func (clients *clientsContainer) addFromSystemARP() {
 // close gracefully closes all the client-specific upstream configurations of
 // the persistent clients.
 func (clients *clientsContainer) close() (err error) {
-	persistent := maps.Values(clients.list)
-	slices.SortFunc(persistent, func(a, b *client.Persistent) (res int) {
-		return strings.Compare(a.Name, b.Name)
-	})
-
-	var errs []error
-
-	for _, cli := range persistent {
-		if err = cli.CloseUpstreams(); err != nil {
-			errs = append(errs, err)
-		}
-	}
-
-	return errors.Join(errs...)
+	return clients.clientIndex.CloseUpstreams()
 }
