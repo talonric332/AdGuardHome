@@ -92,6 +92,10 @@ func (ci *Index) Add(c *Persistent) {
 // Clashes returns an error if the index contains a different persistent client
 // with at least a single identifier contained by c.  c must be non-nil.
 func (ci *Index) Clashes(c *Persistent) (err error) {
+	if p := ci.clashesName(c); p != nil {
+		return fmt.Errorf("another client uses the same name %q", p.Name)
+	}
+
 	for _, id := range c.ClientIDs {
 		existing, ok := ci.clientIDToUID[id]
 		if ok && existing != c.UID {
@@ -114,6 +118,21 @@ func (ci *Index) Clashes(c *Persistent) (err error) {
 	p, mac := ci.clashesMAC(c)
 	if p != nil {
 		return fmt.Errorf("another client %q uses the same MAC %q", p.Name, mac)
+	}
+
+	return nil
+}
+
+// clashesName returns a previous client with the same name as c.  c must be
+// non-nil.
+func (ci *Index) clashesName(c *Persistent) (existing *Persistent) {
+	existing, ok := ci.FindByName(c.Name)
+	if !ok {
+		return nil
+	}
+
+	if existing.UID != c.UID {
+		return existing
 	}
 
 	return nil
@@ -272,7 +291,8 @@ func (ci *Index) Size() (n int) {
 	return len(ci.uidToClient)
 }
 
-// Range calls f for each persistent client.
+// Range calls f for each persistent client, unless cont is false.  The order is
+// undefined.
 func (ci *Index) Range(f func(c *Persistent) (cont bool)) {
 	for _, c := range ci.uidToClient {
 		if !f(c) {

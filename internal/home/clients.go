@@ -96,8 +96,9 @@ func (clients *clientsContainer) Init(
 	arpDB arpdb.Interface,
 	filteringConf *filtering.Config,
 ) (err error) {
+	// TODO(s.chzhen):  Refactor it.
 	if clients.clientIndex != nil {
-		log.Fatal("clients.list != nil")
+		return errors.Error("clients container already initialized")
 	}
 
 	clients.runtimeIndex = client.NewRuntimeIndex()
@@ -280,7 +281,7 @@ func (clients *clientsContainer) addFromConfig(
 			return fmt.Errorf("clients: init persistent client at index %d: %w", i, err)
 		}
 
-		_, err = clients.add(cli)
+		err = clients.add(cli)
 		if err != nil {
 			log.Error("clients: adding client at index %d %s: %s", i, cli.Name, err)
 		}
@@ -605,37 +606,28 @@ func (clients *clientsContainer) check(c *client.Persistent) (err error) {
 	return nil
 }
 
-// add adds a new client object.  ok is false if such client already exists or
-// if an error occurred.
-func (clients *clientsContainer) add(c *client.Persistent) (ok bool, err error) {
+// add adds a persistent client or returns an error.
+func (clients *clientsContainer) add(c *client.Persistent) (err error) {
 	err = clients.check(c)
 	if err != nil {
-		return false, err
+		// Don't wrap the error since it's informative enough as is.
+		return err
 	}
 
 	clients.lock.Lock()
 	defer clients.lock.Unlock()
 
-	// check Name index
-	//
-	// TODO(s.chzhen):  Use [client.Index.Clashes].
-	_, ok = clients.clientIndex.FindByName(c.Name)
-	if ok {
-		return false, nil
-	}
-
-	// check ID index
 	err = clients.clientIndex.Clashes(c)
 	if err != nil {
 		// Don't wrap the error since it's informative enough as is.
-		return false, err
+		return err
 	}
 
 	clients.addLocked(c)
 
 	log.Debug("clients: added %q: ID:%q [%d]", c.Name, c.IDs(), clients.clientIndex.Size())
 
-	return true, nil
+	return nil
 }
 
 // addLocked c to the indexes.  clients.lock is expected to be locked.
@@ -680,22 +672,6 @@ func (clients *clientsContainer) update(prev, c *client.Persistent) (err error) 
 	clients.lock.Lock()
 	defer clients.lock.Unlock()
 
-	// Check the name index.
-	if prev.Name != c.Name {
-		_, ok := clients.clientIndex.FindByName(c.Name)
-		if ok {
-			return errors.Error("client already exists")
-		}
-	}
-
-	if c.EqualIDs(prev) {
-		clients.removeLocked(prev)
-		clients.addLocked(c)
-
-		return nil
-	}
-
-	// Check the ID index.
 	err = clients.clientIndex.Clashes(c)
 	if err != nil {
 		// Don't wrap the error since it's informative enough as is.

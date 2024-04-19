@@ -56,6 +56,7 @@ func TestClientIndex(t *testing.T) {
 	}}
 
 	ci := newIDIndex(clients)
+	require.Equal(t, len(clients), ci.Size())
 
 	testCases := []struct {
 		want *Persistent

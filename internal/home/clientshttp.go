@@ -336,15 +336,9 @@ func (clients *clientsContainer) handleAddClient(w http.ResponseWriter, r *http.
 		return
 	}
 
-	ok, err := clients.add(c)
+	err = clients.add(c)
 	if err != nil {
 		aghhttp.Error(r, w, http.StatusBadRequest, "%s", err)
-
-		return
-	}
-
-	if !ok {
-		aghhttp.Error(r, w, http.StatusBadRequest, "Client already exists")
 
 		return
 	}
