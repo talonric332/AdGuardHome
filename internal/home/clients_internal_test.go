@@ -41,7 +41,7 @@ func newClientsContainer(t *testing.T) (c *clientsContainer) {
 	}
 
 	dhcp := &testDHCP{
-		OnLeases: func() (leases []*dhcpsvc.Lease) { panic("not implemented") },
+		OnLeases: func() (leases []*dhcpsvc.Lease) { return nil },
 		OnHostBy: func(ip netip.Addr) (host string) { return "" },
 		OnMACBy:  func(ip netip.Addr) (mac net.HardwareAddr) { return nil },
 	}

@@ -229,9 +229,9 @@ func (c *Persistent) IDsLen() (n int) {
 	return len(c.IPs) + len(c.Subnets) + len(c.MACs) + len(c.ClientIDs)
 }
 
-// equalIDs returns true if the ids of the current and previous clients are the
+// EqualIDs returns true if the ids of the current and previous clients are the
 // same.
-func (c *Persistent) equalIDs(prev *Persistent) (equal bool) {
+func (c *Persistent) EqualIDs(prev *Persistent) (equal bool) {
 	return slices.Equal(c.IPs, prev.IPs) &&
 		slices.Equal(c.Subnets, prev.Subnets) &&
 		slices.EqualFunc(c.MACs, prev.MACs, slices.Equal[net.HardwareAddr]) &&

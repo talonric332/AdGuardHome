@@ -343,7 +343,9 @@ func (clients *clientsContainer) handleAddClient(w http.ResponseWriter, r *http.
 		return
 	}
 
-	onConfigModified()
+	if !clients.testing {
+		onConfigModified()
+	}
 }
 
 // handleDelClient is the handler for POST /control/clients/delete HTTP API.
@@ -368,7 +370,9 @@ func (clients *clientsContainer) handleDelClient(w http.ResponseWriter, r *http.
 		return
 	}
 
-	onConfigModified()
+	if !clients.testing {
+		onConfigModified()
+	}
 }
 
 // updateJSON contains the name and data of the updated persistent client.
@@ -425,7 +429,9 @@ func (clients *clientsContainer) handleUpdateClient(w http.ResponseWriter, r *ht
 		return
 	}
 
-	onConfigModified()
+	if !clients.testing {
+		onConfigModified()
+	}
 }
 
 // handleFindClient is the handler for GET /control/clients/find HTTP API.

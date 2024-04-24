@@ -118,7 +118,7 @@ func TestPersistentClient_EqualIDs(t *testing.T) {
 			err = prev.SetIDs(tc.prevIDs)
 			require.NoError(t, err)
 
-			tc.want(t, c.equalIDs(prev))
+			tc.want(t, c.EqualIDs(prev))
 		})
 	}
 }
