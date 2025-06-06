@@ -18,93 +18,91 @@ test.describe('QueryLog', () => {
             await route.fulfill({
                 status: 200,
                 contentType: 'application/json',
-                body: JSON.stringify(
-                    {
-                        "data": [
-                            {
-                                "answer": [
-                                    {
-                                        "type": "A",
-                                        "value": "77.88.44.242",
-                                        "ttl": 294
-                                    },
-                                    {
-                                        "type": "A",
-                                        "value": "5.255.255.242",
-                                        "ttl": 294
-                                    },
-                                    {
-                                        "type": "A",
-                                        "value": "77.88.55.242",
-                                        "ttl": 294
-                                    }
-                                ],
-                                "answer_dnssec": false,
-                                "cached": false,
-                                "client": "127.0.0.1",
-                                "client_info": {
-                                    "whois": {},
-                                    "name": "localhost",
-                                    "disallowed_rule": "127.0.0.1",
-                                    "disallowed": false
+                body: JSON.stringify({
+                    data: [
+                        {
+                            answer: [
+                                {
+                                    type: 'A',
+                                    value: '77.88.44.242',
+                                    ttl: 294,
                                 },
-                                "client_proto": "",
-                                "elapsedMs": "78.163167",
-                                "question": {
-                                    "class": "IN",
-                                    "name": "ya.ru",
-                                    "type": "A"
+                                {
+                                    type: 'A',
+                                    value: '5.255.255.242',
+                                    ttl: 294,
                                 },
-                                "reason": "NotFilteredNotFound",
-                                "rules": [],
-                                "status": "NOERROR",
-                                "time": "2024-07-17T16:02:37.500662+02:00",
-                                "upstream": "https://dns10.quad9.net:443/dns-query"
+                                {
+                                    type: 'A',
+                                    value: '77.88.55.242',
+                                    ttl: 294,
+                                },
+                            ],
+                            answer_dnssec: false,
+                            cached: false,
+                            client: '127.0.0.1',
+                            client_info: {
+                                whois: {},
+                                name: 'localhost',
+                                disallowed_rule: '127.0.0.1',
+                                disallowed: false,
                             },
-                            {
-                                "answer": [
-                                    {
-                                        "type": "A",
-                                        "value": "77.88.55.242",
-                                        "ttl": 351
-                                    },
-                                    {
-                                        "type": "A",
-                                        "value": "77.88.44.242",
-                                        "ttl": 351
-                                    },
-                                    {
-                                        "type": "A",
-                                        "value": "5.255.255.242",
-                                        "ttl": 351
-                                    }
-                                ],
-                                "answer_dnssec": false,
-                                "cached": false,
-                                "client": "127.0.0.1",
-                                "client_info": {
-                                    "whois": {},
-                                    "name": "localhost",
-                                    "disallowed_rule": "127.0.0.1",
-                                    "disallowed": false
+                            client_proto: '',
+                            elapsedMs: '78.163167',
+                            question: {
+                                class: 'IN',
+                                name: 'ya.ru',
+                                type: 'A',
+                            },
+                            reason: 'NotFilteredNotFound',
+                            rules: [],
+                            status: 'NOERROR',
+                            time: '2024-07-17T16:02:37.500662+02:00',
+                            upstream: '1.1.1.1',
+                        },
+                        {
+                            answer: [
+                                {
+                                    type: 'A',
+                                    value: '77.88.55.242',
+                                    ttl: 351,
                                 },
-                                "client_proto": "",
-                                "elapsedMs": "5051.070708",
-                                "question": {
-                                    "class": "IN",
-                                    "name": "ya.ru",
-                                    "type": "A"
+                                {
+                                    type: 'A',
+                                    value: '77.88.44.242',
+                                    ttl: 351,
                                 },
-                                "reason": "NotFilteredNotFound",
-                                "rules": [],
-                                "status": "NOERROR",
-                                "time": "2024-07-17T16:02:37.4983+02:00",
-                                "upstream": "https://dns10.quad9.net:443/dns-query"
-                            }
-                        ],
-                        "oldest": "2024-07-17T16:02:37.4983+02:00"
-                    }
-                ),
+                                {
+                                    type: 'A',
+                                    value: '5.255.255.242',
+                                    ttl: 351,
+                                },
+                            ],
+                            answer_dnssec: false,
+                            cached: false,
+                            client: '127.0.0.1',
+                            client_info: {
+                                whois: {},
+                                name: 'localhost',
+                                disallowed_rule: '127.0.0.1',
+                                disallowed: false,
+                            },
+                            client_proto: '',
+                            elapsedMs: '5051.070708',
+                            question: {
+                                class: 'IN',
+                                name: 'ya.ru',
+                                type: 'A',
+                            },
+                            reason: 'NotFilteredNotFound',
+                            rules: [],
+                            status: 'NOERROR',
+                            time: '2024-07-17T16:02:37.4983+02:00',
+                            upstream: '1.1.1.1',
+                        },
+                    ],
+                    oldest: '2024-07-17T16:02:37.4983+02:00',
+                }),
             });
         });
 
@@ -112,9 +110,7 @@ test.describe('QueryLog', () => {
 
         await page.getByTestId('querylog_search').fill('127.0.0.1');
 
-        const [request] = await Promise.all([
-            page.waitForRequest((req) => req.url().includes('/control/querylog')),
-        ]);
+        const [request] = await Promise.all([page.waitForRequest((req) => req.url().includes('/control/querylog'))]);
 
         if (request) {
             expect(request.url()).toContain('search=127.0.0.1');

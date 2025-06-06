@@ -49,7 +49,8 @@ const defaultLocalTimeout = 1 * time.Second
 const defaultClientIDCacheCount = 1024
 
 var defaultDNS = []string{
-	"https://dns10.quad9.net/dns-query",
+	"1.1.1.1",
+	"9.9.9.9",
 }
 var defaultBootstrap = []string{"9.9.9.10", "149.112.112.10", "2620:fe::10", "2620:fe::fe:10"}
 

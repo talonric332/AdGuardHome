@@ -11,7 +11,8 @@ dns:
   - '2620:fe::10'
   - '2620:fe::fe:10'
   upstream_dns:
-  - '8.8.8.8'
+  - '1.1.1.1'
+  - '9.9.9.9'
   dns64_prefixes:
   - '1234::/64'
   upstream_timeout: 1s
