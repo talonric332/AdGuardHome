@@ -173,7 +173,7 @@ func GetValidNetInterfacesForWeb() (nifaces []*NetInterface, err error) {
 	if err != nil {
 		return nil, fmt.Errorf("getting interfaces: %w", err)
 	} else if len(ifaces) == 0 {
-		return nil, errors.Error("no legible interfaces")
+		return nil, errors.Error("no eligible interfaces")
 	}
 
 	for i := range ifaces {
