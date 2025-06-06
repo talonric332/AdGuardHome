@@ -6,6 +6,7 @@ import {
     STANDARD_WEB_PORT,
     TIME_UNITS,
 } from './helpers/constants';
+import { LocalStorageHelper, LOCAL_STORAGE_KEYS } from './helpers/localStorageHelper';
 import { DEFAULT_BLOCKING_IPV4, DEFAULT_BLOCKING_IPV6 } from './reducers/dnsConfig';
 import { Filter } from './helpers/helpers';
 
@@ -365,6 +366,7 @@ export type QueryLogsData = {
     isDetailed: boolean;
     isEntireLog: boolean;
     customInterval: any;
+    refreshInterval: number;
 };
 
 export type ServicesData = {
@@ -567,6 +569,7 @@ export const initialState: RootState = {
         isDetailed: true,
         isEntireLog: false,
         customInterval: null,
+        refreshInterval: LocalStorageHelper.getItem(LOCAL_STORAGE_KEYS.QUERY_LOG_REFRESH_INTERVAL) || 0,
     },
     rewrites: {
         processing: true,

@@ -2,6 +2,7 @@ import { handleActions } from 'redux-actions';
 
 import * as actions from '../actions/queryLogs';
 import { DEFAULT_LOGS_FILTER, DAY, QUERY_LOG_INTERVALS_DAYS, HOUR } from '../helpers/constants';
+import { LocalStorageHelper, LOCAL_STORAGE_KEYS } from '../helpers/localStorageHelper';
 
 const queryLogs = handleActions(
     {
@@ -104,6 +105,11 @@ const queryLogs = handleActions(
             processingSetConfig: false,
         }),
 
+        [actions.setLogsRefreshInterval.toString()]: (state, { payload }: any) => ({
+            ...state,
+            refreshInterval: payload,
+        }),
+
         [actions.getAdditionalLogsRequest.toString()]: (state: any) => ({
             ...state,
             processingAdditionalLogs: true,
@@ -137,6 +143,7 @@ const queryLogs = handleActions(
         isDetailed: true,
         isEntireLog: false,
         customInterval: null,
+        refreshInterval: LocalStorageHelper.getItem(LOCAL_STORAGE_KEYS.QUERY_LOG_REFRESH_INTERVAL) || 0,
     },
 );
 

@@ -51,6 +51,7 @@ interface SettingsProps {
     t: (...args: unknown[]) => string;
     getLogsConfig?: (...args: unknown[]) => unknown;
     setLogsConfig?: (...args: unknown[]) => unknown;
+    setLogsRefreshInterval?: (...args: unknown[]) => unknown;
     clearLogs?: (...args: unknown[]) => unknown;
     stats?: {
         processingGetConfig?: boolean;
@@ -70,6 +71,7 @@ interface SettingsProps {
         processingClear?: boolean;
         processingGetConfig?: boolean;
         ignored?: unknown[];
+        refreshInterval?: number;
     };
     filtering?: {
         interval?: number;
@@ -197,10 +199,12 @@ class Settings extends Component<SettingsProps> {
                                     ignored={queryLogs.ignored}
                                     interval={queryLogs.interval}
                                     customInterval={queryLogs.customInterval}
+                                    refreshInterval={queryLogs.refreshInterval}
                                     anonymize_client_ip={queryLogs.anonymize_client_ip}
                                     processing={queryLogs.processingSetConfig}
                                     processingClear={queryLogs.processingClear}
                                     setLogsConfig={setLogsConfig}
+                                    setLogsRefreshInterval={this.props.setLogsRefreshInterval}
                                     clearLogs={clearLogs}
                                 />
                             </div>

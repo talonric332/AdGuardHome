@@ -30,6 +30,7 @@ export type FormValues = {
     interval: number;
     customInterval?: number | null;
     ignored: string;
+    refreshInterval: number;
 };
 
 type Props = {
@@ -57,6 +58,7 @@ export const Form = ({ initialValues, processing, processingReset, onSubmit, onR
             interval: initialValues.interval || DAY,
             customInterval: initialValues.customInterval || null,
             ignored: initialValues.ignored || '',
+            refreshInterval: initialValues.refreshInterval || 0,
         },
     });
 
@@ -92,6 +94,33 @@ export const Form = ({ initialValues, processing, processingReset, onSubmit, onR
                             data-testid="logs_enabled"
                             title={t('query_log_enable')}
                             disabled={processing}
+                        />
+                    )}
+                />
+            </div>
+
+            <label className="form__label form__label--with-desc">
+                <Trans>query_log_auto_update</Trans>
+            </label>
+
+            <div className="form__desc form__desc--top">
+                <Trans>query_log_auto_update_desc</Trans>
+            </div>
+
+            <div className="form__group form__group--settings">
+                <Controller
+                    name="refreshInterval"
+                    control={control}
+                    render={({ field }) => (
+                        <Input
+                            {...field}
+                            data-testid="logs_refresh_interval"
+                            disabled={processing}
+                            min={0}
+                            onChange={(e) => {
+                                const { value } = e.target;
+                                field.onChange(toNumber(value));
+                            }}
                         />
                     )}
                 />
