@@ -21,7 +21,13 @@ import { getClients } from '../../actions';
 import { getDnsConfig } from '../../actions/dnsConfig';
 import { getAccessList } from '../../actions/access';
 import { getAllBlockedServices } from '../../actions/services';
-import { getLogsConfig, resetFilteredLogs, setFilteredLogs, toggleDetailedLogs } from '../../actions/queryLogs';
+import {
+    getLogsConfig,
+    resetFilteredLogs,
+    setFilteredLogs,
+    toggleDetailedLogs,
+    refreshFilteredLogs,
+} from '../../actions/queryLogs';
 
 import InfiniteTable from './InfiniteTable';
 import './Logs.css';
@@ -89,6 +95,7 @@ const Logs = () => {
     const filter = useSelector((state: RootState) => state.queryLogs.filter, shallowEqual);
 
     const logs = useSelector((state: RootState) => state.queryLogs.logs, shallowEqual);
+    const refreshInterval = useSelector((state: RootState) => state.queryLogs.refreshInterval);
 
     const search = search_url_param || filter?.search || '';
     const response_status = response_status_url_param || filter?.response_status || '';
@@ -187,6 +194,21 @@ const Logs = () => {
             })();
         }
     }, [history.location.search]);
+
+    useEffect(() => {
+        let timer: any;
+        if (refreshInterval > 0) {
+            timer = setInterval(() => {
+                dispatch(refreshFilteredLogs());
+            }, refreshInterval);
+        }
+
+        return () => {
+            if (timer) {
+                clearInterval(timer);
+            }
+        };
+    }, [refreshInterval]);
 
     const renderPage = () => (
         <>

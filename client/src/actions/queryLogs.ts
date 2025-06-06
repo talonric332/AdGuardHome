@@ -206,3 +206,5 @@ export const setLogsConfig = (config: any) => async (dispatch: any) => {
         dispatch(setLogsConfigFailure());
     }
 };
+
+export const setLogsRefreshInterval = createAction('SET_LOGS_REFRESH_INTERVAL');

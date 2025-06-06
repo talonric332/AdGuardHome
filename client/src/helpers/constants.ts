@@ -217,6 +217,8 @@ export const DEFAULT_LANGUAGE = 'en';
 
 export const QUERY_LOGS_PAGE_LIMIT = 20;
 
+export const LOGS_REFRESH_INTERVALS_SECONDS = [0, 5, 10, 30];
+
 export const LEASES_TABLE_DEFAULT_PAGE_SIZE = 20;
 
 export const FILTERED_STATUS = {

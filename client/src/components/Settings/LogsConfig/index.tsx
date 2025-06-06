@@ -5,16 +5,19 @@ import Card from '../../ui/Card';
 
 import { Form, FormValues } from './Form';
 import { HOUR } from '../../../helpers/constants';
+import { LocalStorageHelper, LOCAL_STORAGE_KEYS } from '../../../helpers/localStorageHelper';
 
 interface LogsConfigProps {
     interval: number;
     customInterval?: number;
     enabled: boolean;
     anonymize_client_ip: boolean;
+    refreshInterval: number;
     processing: boolean;
     ignored: unknown[];
     processingClear: boolean;
     setLogsConfig: (...args: unknown[]) => unknown;
+    setLogsRefreshInterval: (...args: unknown[]) => unknown;
     clearLogs: (...args: unknown[]) => unknown;
     t: (...args: unknown[]) => string;
 }
@@ -22,7 +25,7 @@ interface LogsConfigProps {
 class LogsConfig extends Component<LogsConfigProps> {
     handleFormSubmit = (values: FormValues) => {
         const { t, interval: prevInterval } = this.props;
-        const { interval, customInterval, ...rest } = values;
+        const { interval, customInterval, refreshInterval, ...rest } = values;
 
         const newInterval = customInterval ? customInterval * HOUR : interval;
 
@@ -31,6 +34,10 @@ class LogsConfig extends Component<LogsConfigProps> {
             ignored: values.ignored ? values.ignored.split('\n') : [],
             interval: newInterval,
         };
+
+        const refreshMs = refreshInterval * 1000;
+        LocalStorageHelper.setItem(LOCAL_STORAGE_KEYS.QUERY_LOG_REFRESH_INTERVAL, refreshMs);
+        this.props.setLogsRefreshInterval(refreshMs);
 
         if (newInterval < prevInterval) {
             // eslint-disable-next-line no-alert
@@ -58,6 +65,7 @@ class LogsConfig extends Component<LogsConfigProps> {
             processing,
             processingClear,
             anonymize_client_ip,
+            refreshInterval,
             ignored,
             customInterval,
         } = this.props;
@@ -71,6 +79,7 @@ class LogsConfig extends Component<LogsConfigProps> {
                             interval,
                             customInterval,
                             anonymize_client_ip,
+                            refreshInterval: refreshInterval / 1000,
                             ignored: ignored?.join('\n'),
                         }}
                         processing={processing}

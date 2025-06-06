@@ -280,6 +280,8 @@
     "query_log_retention_confirm": "Are you sure you want to change query log rotation? If you decrease the interval value, some data will be lost",
     "anonymize_client_ip": "Anonymize client IP",
     "anonymize_client_ip_desc": "Don't save the client's full IP address to logs or statistics",
+    "query_log_auto_update": "Auto update interval (seconds)",
+    "query_log_auto_update_desc": "Set to 0 to disable automatic refresh",
     "dns_config": "DNS server configuration",
     "dns_cache_config": "DNS cache configuration",
     "dns_cache_config_desc": "Here you can configure DNS cache",
